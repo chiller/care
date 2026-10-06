@@ -1,72 +1,79 @@
-# Recruitment portal
+TABLE OF CONTENTS
 
-**The scenario is real. The specifics are invented, and the assignment is deliberately incomplete.**
+- [howto.md](howto.md) — how to install and run the prototype, which pages to visit, and its features (AI-generated)
+- [spec.md](spec.md) — the prototype spec, derived from my prompts and kept up to date as the prototype changed (AI-generated)
+- This README — my own notes: preparation and initial thoughts, the prompts I used, and closing thoughts (written by me)
 
-**Nothing exists yet.** You are not working around our platform, our data model or our history. You choose the solution, as long as you stick to the requirements in the e-mail brief. 
+PREPARATION AND INITIAL THOUGHTS
 
----
+Documenting the process and the choices made begins even before documenting any technical or domain decisions.
+It seems documenting decisions is the most important part of the assignment and the code that is generated for
+this is secondary. The initial readme describes multiple sides of the problem space, but it seems that 
+the most important problem to solve is to get certainty that "speed of the first reply" is the most impactful
+metric that contributes to the success of the recruitment portal and your customers. 
 
-## The industry, in one minute
+A decision also has to be made regarding the use of AI for this assignment, I would rather not have to hand in
+a lot of generated code that either I or the reviewer will have to read, on the other hand 3 hours is not a lot of 
+time to build a system by hand, like in the old days. The same goes for documentation, which I assume a human will read and
+it seems the respectful thing to do to highlight when the things I wrote end and the AI generated part begins.
 
-| Word | What it means |
-| --- | --- |
-| **Nursery** | A childcare setting for children under 5. One building, with children grouped by age into rooms |
-| **Practitioner** | A member of staff who works with the children |
-| **Nursery manager** | Runs the site. Hires the staff, and covers a room when somebody calls in sick |
-| **Group** | A company that owns several nurseries. Some own 3, some own 300 |
-| **Ratios** | The law sets how many adults per child. 1 adult to 3 babies in England |
-| **Level 3** | The standard childcare qualification. A room needs a set share of qualified staff |
+So the solution should enable the hiring manager to respond promptly to new applications, but what outcome improves if that happens?
+You are trying I assume to sell to your customers that using the new product (the recruitment portal) is worth it
+so that effectively means fewer days closed and less money spent on agency because of faster and better quality hiring
+when recruiting through the recruitment portal. Better quality staff can mean that in an environment of high turnover
+they stick around for longer. Decreasing time to filling a position and increasing quality of hire I imagine can pull
+in different directions, so the tool should not put much pressure on hiring fast.
 
-**Ratios are the whole problem.** One practitioner short is not *slightly worse* — it is legally not allowed to open the room. The manager pays an agency several hundred pounds for a temporary body, or turns families away. Turnover in the sector is high, so this happens constantly.
+What is the minimum amount of development work we can do to show that a manager can promptly answer a job application
+and move on from there. The solution will have some kind of realtime or push notification component. 
 
----
+There is no time to understand the code that AI will produce, I am thinking, the code and the prototype
+is just there to drive the product shaping and decision process. So I anticipate if I want to be notified as quickly as possible
+that conflicts with my desire to not be spammed, so the prototype will be some kind of realtime simulation of one
+manager and a lot of sites and openings.
 
-## Problem
+PROMPTS
 
-Staff hiring is one part of running a nursery that Famly doesn't cover.
+Let's make a first proof of concept web app with two pages, a portal side and a manager side, any applications should appear in realtime to the manager side. We don't need a backend, use typescript and react on the frontend. Derive a spec
+from all my instructions and keep it up to date.
 
-Famly runs the nursery: attendance, child records, parent messaging, invoicing, and the schedule for the staff who already work there. Hiring is the part that happens somewhere else. The manager leaves Famly to advertise the role, collects applications in an inbox, and types the new hire back in by hand.
+As a next step I want a play button on the portal page that simulates people applying with random data at random intervals, add a slider to adjust how often the simulation should apply. Add this instruction to the spec
 
-Nurseries keep asking us for one system. What they describe is a **recruitment portal**: one public page per nursery that shows its open positions, where a job seeker applies in one pass — and one place inside Famly where the manager sees every open position and every applicant against it.
+Add a state for new applications that is read or unread and the list should be sorted unread first, the unread rows should have a different style, clicking on an application should open a dialog where a state transition is enabled (reject, schedule call (replied))
 
-### Challenges
+Next, it is quite annoying and unfair to the applicants that a new application takes the top spot in the list, reverse the list of unread applications, new ones should go to the bottom. Also separate the list vertically: unread (new), read (new), replied, and the rest
 
-Hiring is the fourth job of a manager who is also covering the baby room at lunch.
+(here I realise prompts will just be documentation as well, so will make them more verbose)
 
-| What comes up | What happens today |
-| --- | --- |
-| A position opens in the toddler room | A paid job board, a Facebook group, or a card in the window |
-| Somebody asks whether the nursery is hiring | Nobody can point them anywhere |
-| A practitioner wants to apply | An email address on an advert, or a form to print |
-| The manager needs to know if somebody is qualified | Reads a CV and guesses |
-| An advert goes out and eleven applications arrive at once | An inbox. The strong ones take another job first |
-| One person applies to three sites in the same group | Three separate conversations, or three silences |
-| The manager wants to reply to everybody | Does not |
-| Somebody is hired | The details get typed into Famly by hand |
+we don't need the live counter of how long the application has been in the state, it's unnecessary pressure and noise
 
-### User outcomes
+That's a lot of applications, make the different vertical sections collapsible.
 
-The nursery has one address it can send anybody to, showing what is open right now. The job seeker applies in one pass from a phone, and knows where the application stands. The manager sees every position and every applicant in one place, and can act on the same row.
+Great so I am thinking I want a collapsible sidebar with all the recent notifications, imagine I stepped away from the platform for some hours. I think it will look noisy if there was a burst of notifications.
+For now we have the list of new applications with new ones coming in realtime at the bottom, I'd like the activity sidebar to show newest at the top.
 
-We have not agreed how we would know this worked. We have an instinct that the speed of the first reply matters more than anything about the shortlist — and we are not certain of that.
+(Now I am thinking for the prototype this is enough progress on realtime for now, the notifications in Activity I imagine will go out as a push notification to the hiring manager
+but that needs to be throttled, otherwise they get 20 push notifications in one minute, so in a mature system I am thinking some sort of cron job will send out the aggregate.)
 
----
+Looking at what we have I'm thinking we schedule calls, but that has to be a very limited resource: the time of the hiring manager. 
+We need a page allowing editing of the hiring manager's schedule that is available for 30 minute hiring calls (6 per day max). When opening the dialog for an applicant there should be a handful of available slots, and clicking on those slots as buttons also performs
+the state transition into call scheduled, remove the previous schedule call button. There is no point scheduling 2 weeks in the future, that is too long, so we can run out of time slots here. Let's see what this looks like.
 
-## What we are asking you
+I want to see what happens when we run out of slots, add a button next to "reset demo" that says "simulate auto booking", that should book all the applicants first come first served into available slots, it should stop when there are no more slots, 
+it should show an error snackbar when there are no more available slots in the time interval. 
+That should prompt the hiring manager to make some hard decisions, so that means the schedule view should also open the application dialog when clicking a filled slot.
 
-One fact that is true. Everything else is yours to decide.
+The error banner should also appear if reaching this fully booked state by manually scheduling (seems to only work on simulate auto booking)
 
-- Famly holds a **staff record** for every person who works at a nursery. It carries the rota, the qualification, the room, and the permission to open the app.
+Getting to the end of this time boxed prototyping my last thought is that I need more warning about running out of slots, so that means a warning alert. 
 
-Two questions:
 
-1. **The portal.** The nursery needs somewhere public to show which positions are open, and the job seeker needs to be able to apply from it. That person has no Famly account, no reason to trust us, and may be on a phone during a break. What do they touch, and what are they in your system?
-2. **The manager's side.** What does the manager open, and what is the model that carries a position from open to filled, and an application from arrival to hired, rejected or gone quiet?
+CLOSING THOUGHTS
 
----
 
-## Handing it back
+I think the simulation is effective and fun to see how messy it is when a lot of applications come in and the hiring manager is overwhelmed. 
+I did not think about the portal side of the problem deeply enough, but the first question to tackle there is how much data should we ask
 
-- Fork this repository and commit all relevant files.
-- Document your process, product decisions and other things you find relevant in the `README.md` of your fork
-- Send us a link to your fork, and let us know roughly how much time you spent
+Opus 5.5 is incredibly fast on greenfield especially. I don't even have time to context switch into fixing/writing documentation and it's ready and waiting for my input. 
+I considered showing commited snapshot of every state, but I am thinking the main thing I am submiting is my though process around prompting and shaping the prototype.
+I need another 2-3 hours just to think through and list all the things that are missing here. 
